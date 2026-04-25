@@ -113,7 +113,7 @@ export function Footer() {
         <div className="grid md:grid-cols-4 gap-12 mb-20">
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-3 mb-6">
-              <img src="/logo.png" alt="Pass Easy Logo" className="w-16 h-16 object-contain bg-white rounded-full p-1" />
+              <img src="/logo.png" alt="Pass Easy Logo" className="h-16 w-auto object-contain" />
               <span className="text-2xl font-black tracking-tight">PASS EASY</span>
             </div>
             <p className="text-slate-400 max-w-sm mb-8 leading-relaxed">

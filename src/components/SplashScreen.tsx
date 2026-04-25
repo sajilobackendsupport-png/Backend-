@@ -23,7 +23,7 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
           initial={{ y: 20, opacity: 0, scale: 0.8 }}
           animate={{ y: 0, opacity: 1, scale: 1 }}
           transition={{ duration: 1, ease: "easeOut" }}
-          className="bg-white p-4 rounded-full shadow-2xl shadow-brand-accent/40 mb-10 relative z-10"
+          className="mb-10 relative z-10"
         >
           <motion.div
             animate={{ 
@@ -31,7 +31,7 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
             }}
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           >
-            <img src="/logo.png" alt="Pass Easy Logo" className="w-32 h-32 md:w-40 md:h-40 object-contain rounded-full" />
+            <img src="/logo.png" alt="Pass Easy Logo" className="w-56 h-56 md:w-72 md:h-72 object-contain" />
           </motion.div>
         </motion.div>
 
