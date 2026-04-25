@@ -63,9 +63,40 @@ export default function ApplicationModal({ isOpen, onClose, course, vehicle }: A
         createdAt: serverTimestamp()
       };
       
+      // 1. Submit to Firebase (Existing)
       await setDoc(appRef, appData).catch(err => {
         handleFirestoreError(err, OperationType.CREATE, `applications/${appRef.id}`);
       });
+      
+      // 2. Submit to Google Sheets (if webhook is configured)
+      const webhookUrl = import.meta.env.VITE_GOOGLE_SHEET_WEBHOOK_URL;
+      if (webhookUrl) {
+        try {
+          await fetch(webhookUrl, {
+            method: 'POST',
+            mode: 'no-cors', // Use no-cors to avoid CORS errors from Google Apps Script
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: user.uid,
+              fullName,
+              phoneNumber,
+              course,
+              vehicle,
+              startDate,
+              timeSlot,
+              dateSubmitted: new Date().toISOString()
+            })
+          });
+        } catch (sheetError) {
+          console.error("Failed to submit to Google Sheets:", sheetError);
+        }
+      }
+      
+      // 3. Send Email Notification
+      const body = `New Application%0D%0A%0D%0AName: ${fullName}%0D%0APhone: ${phoneNumber}%0D%0ACourse: ${course}%0D%0AVehicle: ${vehicle}%0D%0AStart Date: ${startDate}%0D%0ATime Slot: ${timeSlot}`;
+      window.location.href = `mailto:passeasymotordrivingschool@gmail.com?subject=New Application from ${fullName}&body=${body}`;
       
       setSubmitted(true);
       setTimeout(() => {

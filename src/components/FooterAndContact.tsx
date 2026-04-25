@@ -58,12 +58,28 @@ export default function Contact() {
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent opacity-10 rounded-full -translate-y-1/2 translate-x-1/2" />
             
             <h3 className="text-2xl font-bold text-white mb-6">Send us a Message</h3>
-            <form className="space-y-6">
+            <form 
+              className="space-y-6"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const form = e.target as HTMLFormElement;
+                const name = (form.elements.namedItem('name') as HTMLInputElement).value;
+                const phone = (form.elements.namedItem('phone') as HTMLInputElement).value;
+                const interest = (form.elements.namedItem('interest') as HTMLSelectElement).value;
+                const message = (form.elements.namedItem('message') as HTMLTextAreaElement).value;
+                
+                const body = `Name: ${name}%0D%0APhone: ${phone}%0D%0AInterest: ${interest}%0D%0AMessage: ${message}`;
+                window.location.href = `mailto:passeasymotordrivingschool@gmail.com?subject=New Website Message from ${name}&body=${body}`;
+                form.reset();
+              }}
+            >
               <div className="grid sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Full Name</label>
                   <input 
                     type="text" 
+                    name="name"
+                    required
                     placeholder="John Doe" 
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white placeholder:text-white/20 focus:outline-none focus:border-brand-accent transition-colors"
                   />
@@ -72,6 +88,8 @@ export default function Contact() {
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Phone Number</label>
                   <input 
                     type="text" 
+                    name="phone"
+                    required
                     placeholder="+977" 
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white placeholder:text-white/20 focus:outline-none focus:border-brand-accent transition-colors"
                   />
@@ -79,7 +97,7 @@ export default function Contact() {
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Interest</label>
-                <select className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-brand-accent transition-colors appearance-none">
+                <select name="interest" className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-brand-accent transition-colors appearance-none">
                   <option className="bg-brand-primary">Light Vehicle Course</option>
                   <option className="bg-brand-primary">Bike/Scooter Course</option>
                   <option className="bg-brand-primary">Abroad Prep Course</option>
@@ -89,12 +107,14 @@ export default function Contact() {
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Message</label>
                 <textarea 
+                  name="message"
+                  required
                   rows={4} 
                   placeholder="How can we help you?" 
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white placeholder:text-white/20 focus:outline-none focus:border-brand-accent transition-colors resize-none"
                 ></textarea>
               </div>
-              <button className="w-full bg-brand-accent text-white font-bold py-5 rounded-2xl shadow-xl shadow-brand-accent/20 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all">
+              <button type="submit" className="w-full bg-brand-accent text-white font-bold py-5 rounded-2xl shadow-xl shadow-brand-accent/20 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all">
                 Send Message
                 <Send size={18} />
               </button>
