@@ -1,0 +1,26 @@
+{
+  "entities": {
+    "Application": {
+      "title": "Application",
+      "description": "A user's training application or enrollment request.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The UID of the user." },
+        "fullName": { "type": "string", "description": "User's full name" },
+        "phoneNumber": { "type": "string", "description": "User's phone number" },
+        "course": { "type": "string" },
+        "vehicle": { "type": "string" },
+        "startDate": { "type": "string" },
+        "timeSlot": { "type": "string" },
+        "createdAt": { "type": "string", "description": "Firestore server timestamp" }
+      },
+      "required": ["userId", "fullName", "phoneNumber", "course", "vehicle", "startDate", "timeSlot", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/applications/{applicationId}": {
+      "schema": { "$ref": "#/entities/Application" },
+      "description": "Training applications submitted by users."
+    }
+  }
+}

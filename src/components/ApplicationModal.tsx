@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, Calendar, Clock, User, Phone, CheckCircle2 } from 'lucide-react';
+import { X, Send, Calendar, Clock, UserIcon, Phone, CheckCircle2, LogIn } from 'lucide-react';
+import { auth, db } from '../firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { signIn, handleFirestoreError, OperationType } from '../lib/firestore_utils';
 
 interface ApplicationModalProps {
   isOpen: boolean;
@@ -11,14 +15,76 @@ interface ApplicationModalProps {
 
 export default function ApplicationModal({ isOpen, onClose, course, vehicle }: ApplicationModalProps) {
   const [submitted, setSubmitted] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Form fields
+  const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [timeSlot, setTimeSlot] = useState('');
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      if (u && u.displayName) {
+        setFullName(u.displayName);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const handleSignIn = async () => {
+    try {
+      setError(null);
+      await signIn();
+    } catch (e: any) {
+      setError("Failed to sign in");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      onClose();
-    }, 3000);
+    if (!user) return;
+    
+    setLoading(true);
+    setError(null);
+    try {
+      const appRef = doc(collection(db, 'applications'));
+      const appData = {
+        userId: user.uid,
+        fullName,
+        phoneNumber,
+        course,
+        vehicle,
+        startDate,
+        timeSlot,
+        createdAt: serverTimestamp()
+      };
+      
+      await setDoc(appRef, appData).catch(err => {
+        handleFirestoreError(err, OperationType.CREATE, `applications/${appRef.id}`);
+      });
+      
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        onClose();
+        // reset fields
+        setStartDate('');
+        setTimeSlot('');
+        setPhoneNumber('');
+      }, 3000);
+    } catch (err: any) {
+      if (err.message.includes('Firestore Error')) {
+        setError("Missing or insufficient permissions.");
+      } else {
+        setError(err.message || 'An error occurred.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -79,68 +145,103 @@ export default function ApplicationModal({ isOpen, onClose, course, vehicle }: A
                         <div className="text-xs text-slate-500 font-medium">Selected Vehicle: {vehicle}</div>
                       </div>
                     </div>
-
-                    <div className="space-y-4">
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                          <User size={18} />
-                        </div>
-                        <input
-                          required
-                          type="text"
-                          placeholder="Full Name"
-                          className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-brand-primary placeholder:text-slate-400 outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent transition-all"
-                        />
+                    
+                    {error && (
+                      <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">
+                        {error}
                       </div>
+                    )}
 
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                          <Phone size={18} />
-                        </div>
-                        <input
-                          required
-                          type="tel"
-                          placeholder="Phone Number"
-                          className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-brand-primary placeholder:text-slate-400 outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent transition-all"
-                        />
+                    {!user ? (
+                      <div className="py-6 text-center">
+                        <p className="text-slate-600 mb-6">Please sign in to submit your application.</p>
+                        <button
+                          type="button"
+                          onClick={handleSignIn}
+                          className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-slate-800 transition-all"
+                        >
+                          <LogIn size={18} />
+                          Sign in with Google
+                        </button>
                       </div>
-
-                      <div className="grid grid-cols-2 gap-4">
+                    ) : (
+                      <div className="space-y-4">
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                            <Calendar size={18} />
+                            <UserIcon size={18} />
                           </div>
-                          <select required className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-brand-primary outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent transition-all appearance-none cursor-pointer">
-                            <option value="">Start Date</option>
-                            <option value="immediate">Immediately</option>
-                            <option value="next_week">Next Week</option>
-                            <option value="next_month">Next Month</option>
-                          </select>
+                          <input
+                            required
+                            type="text"
+                            placeholder="Full Name"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-brand-primary placeholder:text-slate-400 outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent transition-all"
+                          />
                         </div>
+
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                            <Clock size={18} />
+                            <Phone size={18} />
                           </div>
-                          <select required className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-brand-primary outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent transition-all appearance-none cursor-pointer">
-                            <option value="">Time Slot</option>
-                            <option value="morning">Morning (6AM - 10AM)</option>
-                            <option value="day">Day (10AM - 3PM)</option>
-                            <option value="evening">Evening (3PM - 6PM)</option>
-                          </select>
+                          <input
+                            required
+                            type="tel"
+                            placeholder="Phone Number"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-brand-primary placeholder:text-slate-400 outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent transition-all"
+                          />
                         </div>
-                      </div>
-                    </div>
 
-                    <button
-                      type="submit"
-                      className="w-full mt-6 bg-brand-accent text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-accent/20 flex items-center justify-center gap-2 hover:bg-brand-accent/90 active:scale-[0.98] transition-all"
-                    >
-                      Submit Application
-                      <Send size={18} />
-                    </button>
-                    <p className="text-center text-xs text-slate-400 mt-4">
-                      By submitting, you agree to our terms of training.
-                    </p>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                              <Calendar size={18} />
+                            </div>
+                            <select 
+                              required 
+                              value={startDate}
+                              onChange={(e) => setStartDate(e.target.value)}
+                              className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-brand-primary outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent transition-all appearance-none cursor-pointer"
+                            >
+                              <option value="">Start Date</option>
+                              <option value="immediate">Immediately</option>
+                              <option value="next_week">Next Week</option>
+                              <option value="next_month">Next Month</option>
+                            </select>
+                          </div>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                              <Clock size={18} />
+                            </div>
+                            <select 
+                              required 
+                              value={timeSlot}
+                              onChange={(e) => setTimeSlot(e.target.value)}
+                              className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-brand-primary outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent transition-all appearance-none cursor-pointer"
+                            >
+                              <option value="">Time Slot</option>
+                              <option value="morning">Morning (6AM - 10AM)</option>
+                              <option value="day">Day (10AM - 3PM)</option>
+                              <option value="evening">Evening (3PM - 6PM)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="w-full mt-6 bg-brand-accent text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-accent/20 flex items-center justify-center gap-2 hover:bg-brand-accent/90 active:scale-[0.98] transition-all disabled:opacity-70"
+                        >
+                          {loading ? 'Submitting...' : 'Submit Application'}
+                          {!loading && <Send size={18} />}
+                        </button>
+                        <p className="text-center text-xs text-slate-400 mt-4">
+                          By submitting, you agree to our terms of training.
+                        </p>
+                      </div>
+                    )}
                   </form>
                 )}
               </div>

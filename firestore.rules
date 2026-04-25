@@ -1,0 +1,33 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} { 
+      allow read, write: if false; 
+    }
+
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function isValidApplication(data) {
+      return data.keys().hasAll(['userId', 'fullName', 'phoneNumber', 'course', 'vehicle', 'startDate', 'timeSlot', 'createdAt']) &&
+             data.keys().size() == 8 &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.fullName is string && data.fullName.size() > 0 && data.fullName.size() <= 100 &&
+             data.phoneNumber is string && data.phoneNumber.size() > 0 && data.phoneNumber.size() <= 20 &&
+             data.course is string && data.course.size() > 0 && data.course.size() <= 100 &&
+             data.vehicle is string && data.vehicle.size() > 0 && data.vehicle.size() <= 100 &&
+             data.startDate is string && data.startDate.size() > 0 && data.startDate.size() <= 50 &&
+             data.timeSlot is string && data.timeSlot.size() > 0 && data.timeSlot.size() <= 50 &&
+             data.createdAt == request.time;
+    }
+
+    match /applications/{applicationId} {
+      allow create: if isSignedIn() && isValidId(applicationId) && isValidApplication(incoming());
+      allow get, list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+  }
+}
