@@ -31,7 +31,7 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
             }}
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           >
-            <img src="/logo.png" alt="Pass Easy Logo" className="w-56 h-56 md:w-72 md:h-72 object-contain" />
+            <img src="/logo.svg" alt="Pass Easy Logo" className="w-56 h-56 md:w-72 md:h-72 object-contain shadow-2xl rounded-full shadow-brand-accent/30" />
           </motion.div>
         </motion.div>
 
