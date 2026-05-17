@@ -77,7 +77,14 @@ export default function Navbar() {
             
             {user ? (
               <div className="flex items-center gap-4">
-                <span className={`text-sm font-medium ${scrolled ? 'text-slate-600' : 'text-white/90'}`}>
+                <a
+                  href="#dashboard"
+                  className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-brand-accent ${scrolled ? 'text-slate-600' : 'text-white/90'}`}
+                >
+                  <User size={16} />
+                  Dashboard
+                </a>
+                <span className={`text-sm font-medium border-l pl-4 ${scrolled ? 'text-slate-300 border-slate-200' : 'text-white/30 border-white/20'}`}>
                   {user.displayName || user.email}
                 </span>
                 <button
@@ -143,16 +150,26 @@ export default function Navbar() {
               ))}
               
               {user ? (
-                <button
-                  onClick={() => {
-                    handleSignOut();
-                    setIsOpen(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-4 text-base font-medium text-red-500 hover:bg-red-50 rounded-md"
-                >
-                  <LogOut size={18} />
-                  Sign Out ({user.displayName || user.email})
-                </button>
+                <>
+                  <a
+                    href="#dashboard"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 px-3 py-4 text-base font-medium text-slate-700 hover:text-brand-accent hover:bg-slate-50 rounded-md"
+                  >
+                    <User size={18} />
+                    Dashboard
+                  </a>
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setIsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-4 text-base font-medium text-red-500 hover:bg-red-50 rounded-md"
+                  >
+                    <LogOut size={18} />
+                    Sign Out ({user.displayName || user.email})
+                  </button>
+                </>
               ) : (
                 <button
                   onClick={() => {

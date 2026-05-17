@@ -5,9 +5,20 @@ import Hero from './components/Hero';
 import Services, { Courses } from './components/TrainingModes';
 import Contact, { Footer } from './components/FooterAndContact';
 import SplashScreen from './components/SplashScreen';
+import UserDashboard from './components/UserDashboard';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
+  const [currentRoute, setCurrentRoute] = useState(window.location.hash || '#home');
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setCurrentRoute(window.location.hash || '#home');
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -26,12 +37,18 @@ export default function App() {
         <>
           <Navbar />
           <main>
-            <Hero />
-            <Services />
-            <Courses />
-            <Contact />
+            {currentRoute === '#dashboard' ? (
+              <UserDashboard />
+            ) : (
+              <>
+                <Hero />
+                <Services />
+                <Courses />
+                <Contact />
+              </>
+            )}
           </main>
-          <Footer />
+          {currentRoute !== '#dashboard' && <Footer />}
         </>
       )}
     </div>
