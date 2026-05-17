@@ -24,10 +24,25 @@ service cloud.firestore {
              data.createdAt == request.time;
     }
 
+    function isValidMessage(data) {
+      return data.keys().hasAll(['name', 'phone', 'interest', 'message', 'createdAt']) &&
+             data.keys().size() == 5 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.phone is string && data.phone.size() > 0 && data.phone.size() <= 20 &&
+             data.interest is string && data.interest.size() > 0 && data.interest.size() <= 100 &&
+             data.message is string && data.message.size() > 0 && data.message.size() <= 2000 &&
+             data.createdAt == request.time;
+    }
+
     match /applications/{applicationId} {
       allow create: if isSignedIn() && isValidId(applicationId) && isValidApplication(incoming());
       allow get, list: if isSignedIn() && existing().userId == request.auth.uid;
       allow update, delete: if false;
+    }
+
+    match /messages/{messageId} {
+      allow create: if isValidId(messageId) && isValidMessage(incoming());
+      allow read, update, delete: if false;
     }
   }
 }

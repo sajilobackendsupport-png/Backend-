@@ -1,7 +1,50 @@
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import { MapPin, Phone, Mail, Clock, Send, Facebook, Instagram, Twitter, Car } from 'lucide-react';
+import { db } from '../firebase';
+import { collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { handleFirestoreError, OperationType } from '../lib/firestore_utils';
 
 export default function Contact() {
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const name = (form.elements.namedItem('name') as HTMLInputElement).value;
+    const phone = (form.elements.namedItem('phone') as HTMLInputElement).value;
+    const interest = (form.elements.namedItem('interest') as HTMLSelectElement).value;
+    const message = (form.elements.namedItem('message') as HTMLTextAreaElement).value;
+    
+    setLoading(true);
+    setError(null);
+    try {
+      const msgRef = doc(collection(db, 'messages'));
+      await setDoc(msgRef, {
+        name,
+        phone,
+        interest,
+        message,
+        createdAt: serverTimestamp()
+      }).catch(err => {
+        handleFirestoreError(err, OperationType.CREATE, `messages/${msgRef.id}`);
+      });
+      
+      const body = `Name: ${name}%0D%0APhone: ${phone}%0D%0AInterest: ${interest}%0D%0AMessage: ${message}`;
+      window.location.href = `mailto:passeasymotordrivingschool@gmail.com?subject=New Website Message from ${name}&body=${body}`;
+      
+      setSuccess(true);
+      form.reset();
+      setTimeout(() => setSuccess(false), 5000);
+    } catch (err: any) {
+      setError("Failed to send message. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <section id="contact" className="py-24 bg-white relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -58,23 +101,23 @@ export default function Contact() {
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent opacity-10 rounded-full -translate-y-1/2 translate-x-1/2" />
             
             <h3 className="text-2xl font-bold text-white mb-6">Send us a Message</h3>
-            <form 
-              className="space-y-6"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const form = e.target as HTMLFormElement;
-                const name = (form.elements.namedItem('name') as HTMLInputElement).value;
-                const phone = (form.elements.namedItem('phone') as HTMLInputElement).value;
-                const interest = (form.elements.namedItem('interest') as HTMLSelectElement).value;
-                const message = (form.elements.namedItem('message') as HTMLTextAreaElement).value;
-                
-                const body = `Name: ${name}%0D%0APhone: ${phone}%0D%0AInterest: ${interest}%0D%0AMessage: ${message}`;
-                window.location.href = `mailto:passeasymotordrivingschool@gmail.com?subject=New Website Message from ${name}&body=${body}`;
-                form.reset();
-              }}
-            >
-              <div className="grid sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
+            {success ? (
+              <div className="bg-green-500/20 text-green-300 p-6 rounded-2xl border border-green-500/30 text-center">
+                <p className="font-bold mb-2">Message sent successfully!</p>
+                <p className="text-sm opacity-80">We'll get back to you soon.</p>
+              </div>
+            ) : (
+              <form 
+                className="space-y-6"
+                onSubmit={handleSubmit}
+              >
+                {error && (
+                  <div className="bg-red-500/20 text-red-300 p-4 rounded-xl border border-red-500/30 text-sm">
+                    {error}
+                  </div>
+                )}
+                <div className="grid sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Full Name</label>
                   <input 
                     type="text" 
@@ -115,10 +158,11 @@ export default function Contact() {
                 ></textarea>
               </div>
               <button type="submit" className="w-full bg-brand-accent text-white font-bold py-5 rounded-2xl shadow-xl shadow-brand-accent/20 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all">
-                Send Message
-                <Send size={18} />
+                {loading ? 'Sending...' : 'Send Message'}
+                {!loading && <Send size={18} />}
               </button>
             </form>
+            )}
           </motion.div>
         </div>
       </div>

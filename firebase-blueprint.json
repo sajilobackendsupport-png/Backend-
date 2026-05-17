@@ -15,12 +15,29 @@
         "createdAt": { "type": "string", "description": "Firestore server timestamp" }
       },
       "required": ["userId", "fullName", "phoneNumber", "course", "vehicle", "startDate", "timeSlot", "createdAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Contact form submission.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "interest": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "description": "Firestore server timestamp" }
+      },
+      "required": ["name", "phone", "interest", "message", "createdAt"]
     }
   },
   "firestore": {
     "/applications/{applicationId}": {
       "schema": { "$ref": "#/entities/Application" },
       "description": "Training applications submitted by users."
+    },
+    "/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/Message" },
+      "description": "Contact form messages submitted by users."
     }
   }
 }

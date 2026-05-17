@@ -40,7 +40,11 @@ export default function ApplicationModal({ isOpen, onClose, course, vehicle }: A
       setError(null);
       await signIn();
     } catch (e: any) {
-      setError("Failed to sign in");
+      if (e.message?.includes('auth/unauthorized-domain')) {
+        setError(`Please authorize this domain (${window.location.hostname}) in your Firebase Console -> Authentication -> Settings -> Authorized domains.`);
+      } else {
+        setError("Failed to sign in");
+      }
     }
   };
 

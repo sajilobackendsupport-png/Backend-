@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Car, Menu, X, Phone } from 'lucide-react';
+import { Car, Menu, X, Phone, LogIn, LogOut, User } from 'lucide-react';
+import { auth } from '../firebase';
+import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
+import { signIn } from '../lib/firestore_utils';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -13,6 +17,27 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, setUser);
+    return () => unsub();
+  }, []);
+
+  const handleSignIn = async () => {
+    try {
+      await signIn();
+    } catch (e: any) {
+      if (e.message?.includes('auth/unauthorized-domain')) {
+        alert(`Sign in failed: This domain (${window.location.hostname}) is not authorized in Firebase. Please add this domain in Firebase Console -> Authentication -> Settings -> Authorized domains.`);
+      } else {
+        alert(`Sign in error: ${e.message}`);
+      }
+    }
+  };
+
+  const handleSignOut = () => {
+    signOut(auth);
+  };
 
   const navLinks = [
     { name: 'Home', href: '#home' },
@@ -49,6 +74,30 @@ export default function Navbar() {
                 {link.name}
               </a>
             ))}
+            
+            {user ? (
+              <div className="flex items-center gap-4">
+                <span className={`text-sm font-medium ${scrolled ? 'text-slate-600' : 'text-white/90'}`}>
+                  {user.displayName || user.email}
+                </span>
+                <button
+                  onClick={handleSignOut}
+                  className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-red-500 ${scrolled ? 'text-slate-600' : 'text-white/90'}`}
+                >
+                  <LogOut size={16} />
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleSignIn}
+                className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-brand-accent ${scrolled ? 'text-slate-600' : 'text-white/90'}`}
+              >
+                <LogIn size={16} />
+                Sign In
+              </button>
+            )}
+
             <a
               href="tel:+9779851411945"
               className="bg-brand-accent text-white px-5 py-2 rounded-full text-sm font-bold flex items-center gap-2 hover:bg-brand-accent/90 transition-all shadow-md"
@@ -92,6 +141,31 @@ export default function Navbar() {
                   {link.name}
                 </a>
               ))}
+              
+              {user ? (
+                <button
+                  onClick={() => {
+                    handleSignOut();
+                    setIsOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-4 text-base font-medium text-red-500 hover:bg-red-50 rounded-md"
+                >
+                  <LogOut size={18} />
+                  Sign Out ({user.displayName || user.email})
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    handleSignIn();
+                    setIsOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-4 text-base font-medium text-slate-700 hover:text-brand-accent hover:bg-slate-50 rounded-md"
+                >
+                  <LogIn size={18} />
+                  Sign In
+                </button>
+              )}
+
               <div className="pt-4 px-3">
                 <a
                   href="tel:+9779851411945"
