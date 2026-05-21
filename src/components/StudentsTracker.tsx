@@ -12,6 +12,41 @@ interface Student {
   isActive: boolean;
 }
 
+const playAlarmSound = () => {
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
+    
+    const playBeep = (startTime: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(800, startTime);
+      
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+      gain.gain.setValueAtTime(0.3, startTime + 0.15);
+      gain.gain.linearRampToValueAtTime(0, startTime + 0.2);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.start(startTime);
+      osc.stop(startTime + 0.25);
+    };
+
+    const now = ctx.currentTime;
+    [0, 0.2, 0.4, 1.0, 1.2, 1.4].forEach(offset => playBeep(now + offset));
+  } catch (e) {
+    console.error('Audio play error:', e);
+  }
+};
+
 export default function StudentsTracker() {
   const [students, setStudents] = useState<Student[]>(() => {
     const saved = localStorage.getItem('practice_students');
@@ -55,6 +90,7 @@ export default function StudentsTracker() {
             const nextTime = student.timeRemainingSeconds - 1;
             if (nextTime === 0) {
               toast(`Time's up for ${student.name}!`, { icon: '⏰', duration: 5000 });
+              playAlarmSound();
               return { ...student, timeRemainingSeconds: nextTime, isActive: false };
             }
             return { ...student, timeRemainingSeconds: nextTime };
