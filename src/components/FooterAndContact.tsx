@@ -4,6 +4,7 @@ import { MapPin, Phone, Mail, Clock, Send, Facebook, Instagram, Twitter, Car } f
 import { db } from '../firebase';
 import { collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../lib/firestore_utils';
+import toast from 'react-hot-toast';
 
 export default function Contact() {
   const [loading, setLoading] = useState(false);
@@ -36,10 +37,12 @@ export default function Contact() {
       window.location.href = `mailto:passeasymotordrivingschool@gmail.com?subject=New Website Message from ${name}&body=${body}`;
       
       setSuccess(true);
+      toast.success('Message sent successfully!');
       form.reset();
       setTimeout(() => setSuccess(false), 5000);
     } catch (err: any) {
       setError("Failed to send message. Please try again.");
+      toast.error("Failed to send message. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -176,10 +179,10 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-12 mb-20">
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center gap-3 mb-6">
+            <a href="#home" className="flex items-center gap-3 mb-6 hover:opacity-90 transition-opacity inline-flex">
               <img src="/logo.svg" alt="Pass Easy Logo" className="h-16 w-auto object-contain" />
               <span className="text-2xl font-black tracking-tight">PASS EASY</span>
-            </div>
+            </a>
             <p className="text-slate-400 max-w-sm mb-8 leading-relaxed">
               Simplifying driving education with professional instructors and modern training methods in Kathmandu. Your success is our primary goal.
             </p>

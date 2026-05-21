@@ -5,6 +5,7 @@ import { auth, db } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { signIn, handleFirestoreError, OperationType } from '../lib/firestore_utils';
+import toast from 'react-hot-toast';
 
 interface ApplicationModalProps {
   isOpen: boolean;
@@ -103,6 +104,7 @@ export default function ApplicationModal({ isOpen, onClose, course, vehicle }: A
       window.location.href = `mailto:passeasymotordrivingschool@gmail.com?subject=New Application from ${fullName}&body=${body}`;
       
       setSubmitted(true);
+      toast.success('Your application was submitted successfully!');
       setTimeout(() => {
         setSubmitted(false);
         onClose();
@@ -114,8 +116,10 @@ export default function ApplicationModal({ isOpen, onClose, course, vehicle }: A
     } catch (err: any) {
       if (err.message.includes('Firestore Error')) {
         setError("Missing or insufficient permissions.");
+        toast.error("Missing or insufficient permissions.");
       } else {
         setError(err.message || 'An error occurred.');
+        toast.error(err.message || 'An error occurred.');
       }
     } finally {
       setLoading(false);

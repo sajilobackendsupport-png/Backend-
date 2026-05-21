@@ -4,6 +4,7 @@ import { Car, Menu, X, Phone, LogIn, LogOut, User } from 'lucide-react';
 import { auth } from '../firebase';
 import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
 import { signIn } from '../lib/firestore_utils';
+import toast from 'react-hot-toast';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,17 +27,19 @@ export default function Navbar() {
   const handleSignIn = async () => {
     try {
       await signIn();
+      toast.success('Successfully signed in!');
     } catch (e: any) {
       if (e.message?.includes('auth/unauthorized-domain')) {
-        alert(`Sign in failed: This domain (${window.location.hostname}) is not authorized in Firebase. Please add this domain in Firebase Console -> Authentication -> Settings -> Authorized domains.`);
+        toast.error(`Sign in failed: This domain (${window.location.hostname}) is not authorized in Firebase.`);
       } else {
-        alert(`Sign in error: ${e.message}`);
+        toast.error(`Sign in error: ${e.message}`);
       }
     }
   };
 
   const handleSignOut = () => {
     signOut(auth);
+    toast.success('Successfully signed out!');
   };
 
   const navLinks = [
@@ -54,12 +57,12 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
+          <a href="#home" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
             <img src="/logo.svg" alt="Pass Easy Logo" className="h-12 w-auto object-contain" />
             <span className={`font-bold text-xl tracking-tight hidden sm:block ${scrolled ? 'text-brand-primary' : 'text-white'}`}>
               PASS EASY
             </span>
-          </div>
+          </a>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
@@ -74,6 +77,14 @@ export default function Navbar() {
                 {link.name}
               </a>
             ))}
+            <a
+              href="#students"
+              className={`text-sm font-medium transition-colors hover:text-brand-accent ${
+                scrolled ? 'text-slate-600' : 'text-white/90'
+              }`}
+            >
+              Timers
+            </a>
             
             {user ? (
               <div className="flex items-center gap-4">
@@ -148,6 +159,13 @@ export default function Navbar() {
                   {link.name}
                 </a>
               ))}
+              <a
+                href="#students"
+                onClick={() => setIsOpen(false)}
+                className="block px-3 py-4 text-base font-medium text-slate-700 hover:text-brand-accent hover:bg-slate-50 rounded-md"
+              >
+                Timers
+              </a>
               
               {user ? (
                 <>

@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'motion/react';
+import { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Services, { Courses } from './components/TrainingModes';
 import Contact, { Footer } from './components/FooterAndContact';
 import SplashScreen from './components/SplashScreen';
 import UserDashboard from './components/UserDashboard';
+import StudentsTracker from './components/StudentsTracker';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-brand-accent selection:text-white">
+      <Toaster position="top-center" toastOptions={{ className: 'font-medium' }} />
       <AnimatePresence>
         {loading && <SplashScreen onFinish={() => setLoading(false)} />}
       </AnimatePresence>
@@ -39,6 +42,8 @@ export default function App() {
           <main>
             {currentRoute === '#dashboard' ? (
               <UserDashboard />
+            ) : currentRoute === '#students' ? (
+              <StudentsTracker />
             ) : (
               <>
                 <Hero />
@@ -48,9 +53,10 @@ export default function App() {
               </>
             )}
           </main>
-          {currentRoute !== '#dashboard' && <Footer />}
+          {currentRoute !== '#dashboard' && currentRoute !== '#students' && <Footer />}
         </>
       )}
     </div>
   );
 }
+
