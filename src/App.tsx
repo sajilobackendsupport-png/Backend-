@@ -8,6 +8,7 @@ import Contact, { Footer } from './components/FooterAndContact';
 import SplashScreen from './components/SplashScreen';
 import UserDashboard from './components/UserDashboard';
 import StudentsTracker from './components/StudentsTracker';
+import WrittenExam from './components/WrittenExam';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -44,6 +45,8 @@ export default function App() {
               <UserDashboard />
             ) : currentRoute === '#students' ? (
               <StudentsTracker />
+            ) : currentRoute === '#exam' ? (
+              <WrittenExam />
             ) : (
               <>
                 <Hero />
@@ -53,7 +56,7 @@ export default function App() {
               </>
             )}
           </main>
-          {currentRoute !== '#dashboard' && currentRoute !== '#students' && <Footer />}
+          {currentRoute !== '#dashboard' && currentRoute !== '#students' && currentRoute !== '#exam' && <Footer />}
         </>
       )}
     </div>

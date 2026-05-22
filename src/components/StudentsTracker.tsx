@@ -59,10 +59,6 @@ export default function StudentsTracker() {
         loadedStudents = loadedStudents.map(student => {
           if (student.isActive) {
             const newTime = Math.max(0, student.timeRemainingSeconds - elapsed);
-            if (newTime === 0 && student.timeRemainingSeconds > 0) {
-              // Note: Cannot show toast perfectly here since it's on component mount, 
-              // but we make sure the time is updated.
-            }
             return { ...student, timeRemainingSeconds: newTime, isActive: newTime > 0 };
           }
           return student;
@@ -76,21 +72,32 @@ export default function StudentsTracker() {
   const [newTimeSlot, setNewTimeSlot] = useState('08:00 AM');
   const [newDuration, setNewDuration] = useState('30');
 
+  const alertedStudentIds = React.useRef<Set<string>>(new Set(
+    students.filter(s => s.timeRemainingSeconds <= 0).map(s => s.id)
+  ));
+
   useEffect(() => {
     localStorage.setItem('practice_students', JSON.stringify(students));
+    
+    // Check for students who just finished
+    students.forEach(student => {
+      if (student.timeRemainingSeconds === 0 && !alertedStudentIds.current.has(student.id)) {
+        alertedStudentIds.current.add(student.id);
+        toast(`Time's up for ${student.name}!`, { icon: '⏰', duration: 5000 });
+        playAlarmSound();
+      } else if (student.timeRemainingSeconds > 0) {
+        alertedStudentIds.current.delete(student.id);
+      }
+    });
   }, [students]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setStudents(currentStudents => {
-        let hasFinished = false;
-        
         const nextStudents = currentStudents.map(student => {
           if (student.isActive && student.timeRemainingSeconds > 0) {
             const nextTime = student.timeRemainingSeconds - 1;
             if (nextTime === 0) {
-              toast(`Time's up for ${student.name}!`, { icon: '⏰', duration: 5000 });
-              playAlarmSound();
               return { ...student, timeRemainingSeconds: nextTime, isActive: false };
             }
             return { ...student, timeRemainingSeconds: nextTime };

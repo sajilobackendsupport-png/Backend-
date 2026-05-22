@@ -85,6 +85,14 @@ export default function Navbar() {
             >
               Timers
             </a>
+            <a
+              href="#exam"
+              className={`text-sm font-medium transition-colors hover:text-brand-accent ${
+                scrolled ? 'text-slate-600' : 'text-white/90'
+              }`}
+            >
+              Practice Exam
+            </a>
             
             {user ? (
               <div className="flex items-center gap-4">
@@ -165,6 +173,13 @@ export default function Navbar() {
                 className="block px-3 py-4 text-base font-medium text-slate-700 hover:text-brand-accent hover:bg-slate-50 rounded-md"
               >
                 Timers
+              </a>
+              <a
+                href="#exam"
+                onClick={() => setIsOpen(false)}
+                className="block px-3 py-4 text-base font-medium text-slate-700 hover:text-brand-accent hover:bg-slate-50 rounded-md"
+              >
+                Practice Exam
               </a>
               
               {user ? (
